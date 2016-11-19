@@ -12,6 +12,7 @@ main =
 
 type alias Model =
   { name : String
+  , age : String
   , password : String
   , passwordAgain : String
   }
@@ -19,13 +20,14 @@ type alias Model =
 
 model : Model
 model =
-  Model "" "" ""
+  Model "" "" "" ""
 
 
 -- UPDATE
 
 type Msg
     = Name String
+    | Age String
     | Password String
     | PasswordAgain String
 
@@ -35,6 +37,9 @@ update msg model =
   case msg of
     Name name ->
       { model | name = name }
+
+    Age age ->
+      { model | age = age }
 
     Password password ->
       { model | password = password }
@@ -49,6 +54,7 @@ view : Model -> Html Msg
 view model =
   div []
     [ input [ type_ "text", placeholder "Name", onInput Name ] []
+    , input [ type_ "text", placeholder "Age", onInput Age ] []
     , input [ type_ "password", placeholder "Password", onInput Password ] []
     , input [ type_ "password", placeholder "Re-enter Password", onInput PasswordAgain ] []
     , viewValidation model
@@ -58,17 +64,19 @@ viewValidation : Model -> Html msg
 viewValidation model =
   let
     (color, message) =
-      if conditions model then
-        ("green", "OK")
+      if not (String.all Char.isDigit model.age) then
+        ("red", "Age must be a number")
+      else if String.length model.password < 6 then
+        ("red", "Password must be at least 6 characters")
+      else if not (String.any Char.isUpper model.password) then
+        ("red", "Password must have at least 1 uppercase letter")
+      else if not (String.any Char.isLower model.password) then
+        ("red", "Password must have at least 1 lowercase letter")
+      else if not (String.any Char.isDigit model.password) then
+        ("red", "Password must have at least 1 digit")
+      else if model.password /= model.passwordAgain then
+        ("red", "Passwords do not match")
       else
-        ("red", "Passwords aren't good, but this is a bad error message!")
+        ("green", "OK")
   in
     div [ style [("color", color)] ] [ text message ]
-
-conditions : Model -> Bool
-conditions model =
-  String.length model.password >= 6
-    && String.any Char.isUpper model.password
-    && String.any Char.isLower model.password
-    && String.any Char.isDigit model.password
-    && model.password == model.passwordAgain
